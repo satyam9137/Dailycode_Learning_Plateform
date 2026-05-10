@@ -1,8 +1,6 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
 import dotenv from "dotenv";
-import { fileURLToPath } from "url";
 import db from "./db.js";
 
 import authRoutes from "./routes/auth.routes.js";
@@ -17,9 +15,6 @@ import feedbackRoutes from "./routes/adminRoutes/feedback.routes.js";
 import leaderboardRoutes from "./routes/adminRoutes/leaderboard.routes.js";
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -38,17 +33,19 @@ app.use("/api/submissions", submissionsRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/", (req, res) => {
+  res.json({
+    message: "Dailycode Backend Running 🚀",
+    status: "success",
+  });
 });
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-  app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
   });
-}
+});
 
 process.on("uncaughtException", (err) => {
   console.error("Uncaught exception:", err);
