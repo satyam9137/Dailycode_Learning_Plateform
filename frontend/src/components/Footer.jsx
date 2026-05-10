@@ -20,9 +20,9 @@ export default function Footer() {
 
         {/* Social Icons (optional for futuristic feel) */}
         <div className="footer-social">
-          <a href="#"><i className="fab fa-github"></i></a>
-          <a href="#"><i className="fab fa-linkedin"></i></a>
-          <a href="#"><i className="fab fa-twitter"></i></a>
+          <button><i className="fab fa-github"></i></button>
+          <button><i className="fab fa-linkedin"></i></button>
+          <button><i className="fab fa-twitter"></i></button>
         </div>
 
         {/* Copy */}

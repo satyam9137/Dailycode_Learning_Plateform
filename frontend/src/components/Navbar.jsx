@@ -8,7 +8,6 @@ export default function Navbar({ isLogin, onLogout }) {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const email = localStorage.getItem("email");
-  const role = localStorage.getItem("role");
 
   const [name, setName] = useState("");
 

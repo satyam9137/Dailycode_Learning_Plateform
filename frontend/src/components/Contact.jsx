@@ -22,12 +22,12 @@ export default function Contact() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/contact", // ✅ CONTACT API
+        "/api/contact",
         {
           email: formData.email,
           message: formData.message,
         },
-        { timeout: 5000 } // 🔥 infinite wait se bachata hai
+        { timeout: 10000 }
       );
 
       console.log("CONTACT RESPONSE:", res.data);
@@ -37,7 +37,9 @@ export default function Contact() {
 
     } catch (error) {
       console.error(error);
-      setStatus("❌ Server not responding");
+      const message =
+        error?.response?.data?.msg || error?.message || "Server not responding";
+      setStatus(`❌ ${message}`);
     } finally {
       setLoading(false); // ⭐ MOST IMPORTANT LINE
     }

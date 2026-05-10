@@ -931,6 +931,7 @@ export default function App() {
   const [code, setCode] = useState("");
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
+  const [submitResult, setSubmitResult] = useState(null);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -943,7 +944,7 @@ export default function App() {
         setCurrentLevel(res.data.currentLevel);
       })
       .catch(() => setError("Failed to load levels"));
-  }, []);
+  }, [userId]);
 
   /* 🔹 Load current level */
   useEffect(() => {
@@ -957,7 +958,7 @@ export default function App() {
         setOutput("");
       })
       .catch(() => setError("Failed to load level"));
-  }, [currentLevel]);
+  }, [userId, currentLevel]);
 
   if (error) return <h2 style={{ padding: 20 }}>{error}</h2>;
   if (!level) return <h2 style={{ padding: 20 }}>Loading...</h2>;
@@ -999,7 +1000,7 @@ export default function App() {
           }}
         >
           <div style={styles.sidebarHeader}>
-            <h3 style={{ margin: 0 }}></h3>
+            <h3 style={{ margin: 0 }}>Levels</h3>
             <button
               style={styles.closeBtn}
               onClick={() => setSidebarOpen(false)}
@@ -1088,16 +1089,52 @@ export default function App() {
                 <button
                   style={{ ...styles.btn, ...styles.submitBtn }}
                   onClick={async () => {
-                    const res = await api.post("/submit", {
-                      userId,
-                      code,
-                      language,
-                    });
+                    if (!userId) {
+                      alert("Please log in before submitting code.");
+                      return;
+                    }
 
-                    alert(res.data.verdict);
+                    setSubmitResult(null);
 
-                    if (res.data.verdict.includes("Accepted")) {
-                      setCurrentLevel((prev) => prev + 1);
+                    try {
+                      const res = await api.post("/submit", {
+                        userId,
+                        code,
+                        language,
+                      });
+
+                      if (res.data?.error) {
+                        alert(res.data.error);
+                        return;
+                      }
+
+                      if (res.data.verdict?.includes("Wrong Answer")) {
+                        setSubmitResult({
+                          verdict: res.data.verdict,
+                          failed_test: res.data.failed_test,
+                          input: res.data.input,
+                          expected_output: res.data.expected_output,
+                          actual_output: res.data.actual_output,
+                          tests: res.data.tests,
+                        });
+                        return;
+                      }
+
+                      if (res.data.verdict?.includes("Accepted")) {
+                        setSubmitResult({
+                          verdict: res.data.verdict,
+                          passed_tests: res.data.passed_tests,
+                          next_level: res.data.next_level,
+                          tests: res.data.tests,
+                        });
+                        setCurrentLevel((prev) => prev + 1);
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert(
+                        err.response?.data?.error ||
+                          "Submission failed. Please try again."
+                      );
                     }
                   }}
                 >
@@ -1133,6 +1170,42 @@ export default function App() {
               </pre>
             </div>
           </div>
+
+          {submitResult && (
+            <div style={styles.submitResultCard}>
+              <h4 style={styles.ioTitle}>Submission Result</h4>
+              <p style={styles.resultText}>{submitResult.verdict}</p>
+
+              {submitResult.failed_test && (
+                <div style={styles.resultDetails}>
+                  <p>Failed test: {submitResult.failed_test}</p>
+                  <p>Input: {submitResult.input || "(none)"}</p>
+                  <p>Expected: {submitResult.expected_output || "(none)"}</p>
+                  <p>Actual: {submitResult.actual_output || "(none)"}</p>
+                </div>
+              )}
+
+              {submitResult.passed_tests && (
+                <div style={styles.resultDetails}>
+                  <p>Passed tests: {submitResult.passed_tests}</p>
+                  <p>Next level: {submitResult.next_level}</p>
+                </div>
+              )}
+
+              {submitResult.tests && submitResult.tests.length > 0 && (
+                <div style={styles.testList}>
+                  <h5>Level {submitResult.current_level || currentLevel} test cases</h5>
+                  {submitResult.tests.map((test, index) => (
+                    <div key={test.id || index} style={styles.testItem}>
+                      <strong>Test {index + 1}</strong>
+                      <p>Input: {test.input || "(none)"}</p>
+                      <p>Expected: {test.expected_output || "(none)"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1317,6 +1390,36 @@ const styles = {
     padding: 10,
     borderRadius: 6,
     color: "#54a0c1",
+  },
+  submitResultCard: {
+    background: "#0f172a",
+    border: "1px solid #334155",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 14,
+    color: "#e2e8f0",
+  },
+  resultText: {
+    margin: "8px 0",
+    fontWeight: 700,
+    color: "#f8fafc",
+  },
+  resultDetails: {
+    background: "#1e293b",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 10,
+    color: "#d1d5db",
+  },
+  testList: {
+    marginTop: 12,
+  },
+  testItem: {
+    background: "#334155",
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 10,
+    color: "#e2e8f0",
   },
   overlay: {
     position: "fixed",

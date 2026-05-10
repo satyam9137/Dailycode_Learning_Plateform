@@ -32,11 +32,11 @@ export default function HomePage({ isLogin, onLogin }) {
 
           <div className="cta-row">
             {/* ✅ SMART BUTTON */}
-            <a href="#" className="cta" onClick={handleStartCoding}>
+            <button className="cta" onClick={handleStartCoding}>
               Start Coding →
-            </a>
+            </button>
 
-            <a href="#" className="learn">Learn more</a>
+            <button className="learn">Learn more</button>
           </div>
         </div>
 
