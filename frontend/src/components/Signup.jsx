@@ -56,7 +56,7 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await axios.post("https://dailycode-learning-plateform-2.onrender.com/signup", {
+      const res = await axios.post("https://dailycode-learning-plateform-4.onrender.com/signup", {
         name: form.name,
         email: form.email,
         password: form.password,
