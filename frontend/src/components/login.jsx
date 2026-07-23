@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import api from "../api";  
 import { useNavigate } from "react-router-dom";
 export default function AuthPage({ onSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -70,7 +71,7 @@ export default function AuthPage({ onSuccess }) {
         // 🔐 LOGIN
 
         
-        const res = await axios.post("https://dailycode-learning-plateform-3.onrender.com/api/auth/login", 
+        const res = await axios.post("/auth/login", 
           {
           email: form.email,
           password: form.password,
@@ -101,7 +102,7 @@ if (res.data.role === "admin") {
 
       } else {
         // 📝 SIGNUP
-        const res = await axios.post("https://dailycode-learning-plateform-3.onrender.com/api/auth/signup", {
+        const res = await axios.post("/auth/signup", {
           name: form.name,
           email: form.email,
           password: form.password,

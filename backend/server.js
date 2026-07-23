@@ -18,14 +18,15 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({
+aapp.use(cors({
   origin: [
-    "https://clever-kringle-24c98f.netlify.app",
+    "https://dailycodeonlinec.netlify.app",
     "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:5173",
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
