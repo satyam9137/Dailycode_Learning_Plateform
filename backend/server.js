@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 
-aapp.use(cors({
+app.use(cors({
   origin: [
     "https://dailycodeonlinec.netlify.app",
     "http://localhost:3000",
