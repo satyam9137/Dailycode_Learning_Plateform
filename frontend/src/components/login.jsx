@@ -68,7 +68,7 @@ export default function AuthPage({ onSuccess }) {
     try {
       if (isLogin) {
         // 🔐 LOGIN
-        const res = await axios.post("https://dailycode-learning-plateform-2.onrender.com/api/auth/login", 
+        const res = await axios.post("https://dailycode-learning-plateform-3.onrender.com/api/auth/login", 
           {
           email: form.email,
           password: form.password,
@@ -99,7 +99,7 @@ if (res.data.role === "admin") {
 
       } else {
         // 📝 SIGNUP
-        const res = await axios.post("https://dailycode-learning-plateform-2.onrender.com/api/auth/signup", {
+        const res = await axios.post("https://dailycode-learning-plateform-3.onrender.com/api/auth/signup", {
           name: form.name,
           email: form.email,
           password: form.password,
