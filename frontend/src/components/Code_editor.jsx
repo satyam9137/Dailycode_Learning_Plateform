@@ -125,7 +125,6 @@ export default function App() {
         </button>
 
         <h1 className="dc-logo" style={styles.logo}>Dailycode</h1>
-
         <div style={styles.langBox}>
           <span className="dc-lang-label" style={styles.langLabel}>Language:</span>
           <select

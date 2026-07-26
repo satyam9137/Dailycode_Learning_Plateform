@@ -93,6 +93,10 @@ localStorage.setItem("name", res.data.name);
 localStorage.setItem("email", form.email);
 localStorage.setItem("role", res.data.role); // 🔥 IMPORTANT
 
+if (onSuccess) {
+  onSuccess();
+}
+
 // 🔀 ROLE BASED REDIRECT
 if (res.data.role === "admin") {
   navigate("/admin/dashboard");

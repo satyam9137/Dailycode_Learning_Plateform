@@ -48,7 +48,7 @@ export async function runCode(req, res) {
       return res.status(400).json({ message: "Unsupported language" });
     }
 
-      const submission = {
+    const submission = {
       source_code: code,
       language_id: config.judge0Id,
       stdin: input || "",
@@ -229,7 +229,7 @@ export async function submitCode(req, res) {
       ]
         .filter(Boolean)
         .join("\n")
-        .trim();
+        .trim(); 
 
       if (normalize(userOutput) !== normalize(test.expected_output)) {
         return res.json({
