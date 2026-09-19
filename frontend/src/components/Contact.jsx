@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import "./Contact.css";
 
 export default function Contact() {
@@ -21,8 +21,8 @@ export default function Contact() {
     setStatus("");
 
     try {
-      const res = await axios.post(
-        "/api/contact",
+      const res = await api.post(
+        "/contact",
         {
           email: formData.email,
           message: formData.message,

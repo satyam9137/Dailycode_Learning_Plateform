@@ -1,184 +1,93 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import { PageHeader, EmptyState, SkeletonRows, Avatar } from "../AdminPannel/ui";
+import { color, font, card } from "../AdminPannel/theme";
 
 export default function Feedback() {
-  const [feedback, setFeedback] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [feedback, setFeedback] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadFeedback();
-
-    const onResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    load();
   }, []);
 
-  const loadFeedback = async () => {
+  const load = async () => {
     try {
       const res = await api.get("/feedback");
       setFeedback(res.data);
     } catch (err) {
       console.error("FEEDBACK ERROR:", err);
-    } finally {
-      setLoading(false);
+      setError("Couldn't load feedback.");
     }
   };
 
-  if (loading) {
-    return <h2 style={styles.loading}>Loading feedback...</h2>;
-  }
-
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>💬 User Feedback</h2>
+    <div>
+      <PageHeader
+        title="Feedback"
+        subtitle={feedback ? `${feedback.length} messages` : "Loading…"}
+      />
 
-      <div style={styles.card}>
-        {feedback.length === 0 ? (
-          <p style={styles.empty}>No feedback found</p>
-        ) : isMobile ? (
-          /* ---------------- MOBILE VIEW ---------------- */
-          <div style={styles.mobileList}>
-            {feedback.map((f) => (
-              <div key={f.id} style={styles.mobileCard}>
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Email</span>
-                  <span>{f.email || "-"}</span>
+      {error && (
+        <div style={cardStyle}>
+          <EmptyState title="Something went wrong" hint={error} />
+        </div>
+      )}
+
+      {!error && feedback === null && (
+        <div style={cardStyle}>
+          <SkeletonRows rows={4} />
+        </div>
+      )}
+
+      {!error && feedback && feedback.length === 0 && (
+        <div style={cardStyle}>
+          <EmptyState
+            title="No feedback yet"
+            hint="Messages submitted through the Contact form will appear here."
+          />
+        </div>
+      )}
+
+      {!error && feedback && feedback.length > 0 && (
+        <div style={styles.list}>
+          {feedback.map((f) => (
+            <div key={f.id} style={cardStyle}>
+              <div style={styles.row}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Avatar name={f.email} size={30} />
+                  <span style={styles.email}>{f.email || "Anonymous"}</span>
                 </div>
-
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Message</span>
-                  <span>{f.message}</span>
-                </div>
-
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Date</span>
-                  <span>
-                    {f.created_at
-                      ? new Date(f.created_at).toLocaleDateString()
-                      : "-"}
+                {f.created_at && (
+                  <span style={styles.date}>
+                    {new Date(f.created_at).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </span>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
-        ) : (
-          /* ---------------- DESKTOP TABLE ---------------- */
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>ID</th>
-                <th style={styles.th}>Email</th>
-                <th style={styles.th}>Message</th>
-                <th style={styles.th}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {feedback.map((f, index) => (
-                <tr key={f.id} style={index % 2 ? styles.rowAlt : styles.row}>
-                  <td style={styles.td}>{f.id}</td>
-                  <td style={styles.td}>{f.email || "-"}</td>
-                  <td style={{ ...styles.td, maxWidth: 400 }}>
-                    {f.message}
-                  </td>
-                  <td style={styles.td}>
-                    {f.created_at
-                      ? new Date(f.created_at).toLocaleDateString()
-                      : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              <p style={styles.message}>{f.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-/* ---------------- STYLES ---------------- */
+const cardStyle = { ...card, padding: 20 };
 
 const styles = {
-  container: {
-    padding: "24px",
-    background: "#0f172a",
-    minHeight: "100vh",
-  },
-  heading: {
-    color: "#e5e7eb",
-    marginBottom: "16px",
-    fontSize: "22px",
-  },
-  loading: {
-    color: "#e5e7eb",
-    padding: 20,
-  },
-  card: {
-    background: "#020617",
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
-  },
-
-  /* -------- DESKTOP TABLE -------- */
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  th: {
-    textAlign: "left",
-    padding: "12px",
-    background: "#020617",
-    color: "#38bdf8",
-    borderBottom: "1px solid #1e293b",
-    fontSize: "14px",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  },
-  td: {
-    padding: "12px",
-    borderBottom: "1px solid #1e293b",
-    color: "#f1f5f9",
-    fontSize: "14px",
-    verticalAlign: "top",
-  },
+  list: { display: "flex", flexDirection: "column", gap: 12 },
   row: {
-    background: "#0f172a",
-  },
-  rowAlt: {
-    background: "#020617",
-  },
-
-  /* -------- MOBILE CARDS -------- */
-  mobileList: {
     display: "flex",
-    flexDirection: "column",
-    gap: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
-  mobileCard: {
-    background: "#0f172a",
-    borderRadius: 10,
-    padding: 14,
-    border: "1px solid #1e293b",
-  },
-  mobileRow: {
-    marginBottom: 8,
-    display: "flex",
-    flexDirection: "column",
-    fontSize: 14,
-  },
-  label: {
-    color: "#38bdf8",
-    fontSize: 12,
-    marginBottom: 2,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  },
-
-  empty: {
-    color: "#94a3b8",
-    padding: "10px",
-  },
+  email: { fontWeight: 600, fontSize: 14, color: color.textPrimary },
+  date: { fontSize: 12.5, color: color.textTertiary, fontFamily: font.mono },
+  message: { margin: 0, fontSize: 14, color: color.textSecondary, lineHeight: 1.6 },
 };

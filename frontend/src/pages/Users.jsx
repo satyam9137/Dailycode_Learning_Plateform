@@ -1,19 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../api";
+import { PageHeader, SearchInput, EmptyState, SkeletonRows, Avatar, TableCard, tableStyles } from "../AdminPannel/ui";
+import { color, font } from "../AdminPannel/theme";
 
 export default function Users() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [users, setUsers] = useState(null);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     loadUsers();
-
-    const onResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const loadUsers = async () => {
@@ -22,75 +18,62 @@ export default function Users() {
       setUsers(res.data);
     } catch (err) {
       console.error("USERS ERROR:", err);
-    } finally {
-      setLoading(false);
+      setError("Couldn't load users.");
     }
   };
 
-  if (loading) {
-    return <h2 style={styles.loading}>Loading users...</h2>;
-  }
+  const filtered = useMemo(() => {
+    if (!users) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter(
+      (u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+    );
+  }, [users, query]);
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>👤 Users</h2>
+    <div>
+      <PageHeader
+        title="Users"
+        subtitle={users ? `${users.length} registered` : "Loading…"}
+      >
+        <SearchInput value={query} onChange={setQuery} placeholder="Search name or email" />
+      </PageHeader>
 
-      <div style={styles.card}>
-        {users.length === 0 ? (
-          <p style={styles.empty}>No users found</p>
-        ) : isMobile ? (
-          /* ================= MOBILE VIEW ================= */
-          <div style={styles.mobileList}>
-            {users.map((u) => (
-              <div key={u.id} style={styles.mobileCard}>
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>ID</span>
-                  <span>{u.id}</span>
-                </div>
+      <TableCard>
+        {error && <EmptyState title="Something went wrong" hint={error} />}
 
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Name</span>
-                  <span>{u.name}</span>
-                </div>
+        {!error && users === null && <SkeletonRows rows={6} />}
 
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Email</span>
-                  <span>{u.email}</span>
-                </div>
+        {!error && users && filtered.length === 0 && (
+          <EmptyState
+            title={query ? "No matches" : "No users yet"}
+            hint={query ? "Try a different search." : "Registered users will appear here."}
+          />
+        )}
 
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Joined</span>
-                  <span>
-                    {new Date(u.created_at).toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* ================= DESKTOP TABLE ================= */
+        {!error && users && filtered.length > 0 && (
           <div style={{ overflowX: "auto" }}>
-            <table style={styles.table}>
+            <table style={tableStyles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>ID</th>
-                  <th style={styles.th}>Name</th>
-                  <th style={styles.th}>Email</th>
-                  <th style={styles.th}>Created</th>
+                  <th style={tableStyles.th}>User</th>
+                  <th style={tableStyles.th}>Email</th>
+                  <th style={tableStyles.th}>Joined</th>
                 </tr>
               </thead>
-
               <tbody>
-                {users.map((u, index) => (
-                  <tr
-                    key={u.id}
-                    style={index % 2 ? styles.rowAlt : styles.row}
-                  >
-                    <td style={styles.td}>{u.id}</td>
-                    <td style={styles.td}>{u.name}</td>
-                    <td style={styles.td}>{u.email}</td>
-                    <td style={styles.td}>
-                      {new Date(u.created_at).toLocaleString("en-IN")}
+                {filtered.map((u) => (
+                  <tr key={u.id}>
+                    <td style={tableStyles.td}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Avatar name={u.name} />
+                        <span style={{ fontWeight: 500 }}>{u.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ ...tableStyles.td, color: color.textSecondary }}>{u.email}</td>
+                    <td style={{ ...tableStyles.td, color: color.textSecondary, fontFamily: font.mono, fontSize: 13 }}>
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                     </td>
                   </tr>
                 ))}
@@ -98,95 +81,7 @@ export default function Users() {
             </table>
           </div>
         )}
-      </div>
+      </TableCard>
     </div>
   );
 }
-
-/* ================= STYLES ================= */
-
-const styles = {
-  container: {
-    padding: "24px",
-    background: "#0f172a",
-    minHeight: "100vh",
-  },
-  heading: {
-    color: "#e5e7eb",
-    marginBottom: "16px",
-    fontSize: "22px",
-  },
-  loading: {
-    color: "#e5e7eb",
-    padding: 20,
-  },
-
-  card: {
-    background: "#020617",
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
-    overflowX: "auto", // 🔥 IMPORTANT FIX
-  },
-
-  /* -------- DESKTOP TABLE -------- */
-  table: {
-    width: "100%",
-    minWidth: "800px", // 🔥 prevents column cut
-    borderCollapse: "collapse",
-  },
-  th: {
-    textAlign: "left",
-    padding: "12px",
-    background: "#020617",
-    color: "#38bdf8",
-    borderBottom: "1px solid #1e293b",
-    fontSize: "14px",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    whiteSpace: "nowrap",
-  },
-  td: {
-    padding: "12px",
-    borderBottom: "1px solid #1e293b",
-    color: "#f1f5f9",
-    fontSize: "14px",
-    whiteSpace: "nowrap",
-  },
-  row: {
-    background: "#0f172a",
-  },
-  rowAlt: {
-    background: "#020617",
-  },
-
-  /* -------- MOBILE CARDS -------- */
-  mobileList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 14,
-  },
-  mobileCard: {
-    background: "#0f172a",
-    borderRadius: 10,
-    padding: 14,
-    border: "1px solid #1e293b",
-  },
-  mobileRow: {
-    display: "flex",
-    flexDirection: "column",
-    marginBottom: 8,
-    fontSize: 14,
-  },
-  label: {
-    color: "#38bdf8",
-    fontSize: 12,
-    marginBottom: 2,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  },
-  empty: {
-    color: "#94a3b8",
-    padding: "10px",
-  },
-};

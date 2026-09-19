@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, NavLink } from "react-router-dom";
+import { Routes, Route, useNavigate, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Dashboard from "./AdminPannel/Dashboard";
 import Users from "./pages/Users";
@@ -6,6 +6,16 @@ import Problems from "./pages/Problems";
 import Feedback from "./pages/Feedback";
 import Leaderboard from "./pages/Leaderboard";
 import Footer from "./components/Footer";
+import { color, font } from "./AdminPannel/theme";
+import {
+  GridIcon,
+  UsersIcon,
+  ProblemsIcon,
+  FeedbackIcon,
+  TrophyIcon,
+  LogoutIcon,
+  MenuIcon,
+} from "./AdminPannel/icons";
 
 export default function AdminDashboard() {
   return (
@@ -16,10 +26,19 @@ export default function AdminDashboard() {
   );
 }
 
+const MENU = [
+  { path: "/admin/dashboard", label: "Overview", Icon: GridIcon },
+  { path: "/admin/dashboard/users", label: "Users", Icon: UsersIcon },
+  { path: "/admin/dashboard/problems", label: "Problems", Icon: ProblemsIcon },
+  { path: "/admin/dashboard/feedback", label: "Feedback", Icon: FeedbackIcon },
+  { path: "/admin/dashboard/leaderboard", label: "Leaderboard", Icon: TrophyIcon },
+];
+
 /* ================= ADMIN LAYOUT ================= */
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const onResize = () => setSidebarOpen(window.innerWidth > 768);
@@ -27,17 +46,29 @@ function AdminLayout() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const active = MENU.find((m) =>
+    m.path === "/admin/dashboard"
+      ? location.pathname === m.path || location.pathname === m.path + "/"
+      : location.pathname.startsWith(m.path)
+  );
+
   return (
     <div style={styles.app}>
       {/* TOP BAR */}
       <header style={styles.topbar}>
-        <button
-          style={styles.menuBtn}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          ☰
-        </button>
-        <h1 style={styles.logo}>DailyCode</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            style={styles.menuBtn}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle sidebar"
+          >
+            <MenuIcon />
+          </button>
+          <span style={styles.logo}>DailyCode</span>
+          <span style={styles.crumbDivider}>/</span>
+          <span style={styles.crumbCurrent}>{active?.label || "Admin"}</span>
+        </div>
+
         <button
           style={styles.logoutBtn}
           onClick={() => {
@@ -46,7 +77,8 @@ function AdminLayout() {
             window.location.reload();
           }}
         >
-          Logout
+          <LogoutIcon size={15} />
+          Log out
         </button>
       </header>
 
@@ -54,7 +86,7 @@ function AdminLayout() {
       <div style={styles.layout}>
         <Sidebar
           sidebarOpen={sidebarOpen}
-          closeSidebar={() => setSidebarOpen(false)}
+          closeSidebar={() => window.innerWidth <= 768 && setSidebarOpen(false)}
         />
 
         <main style={styles.content}>
@@ -73,17 +105,11 @@ function AdminLayout() {
 
 /* ================= SIDEBAR ================= */
 function Sidebar({ sidebarOpen, closeSidebar }) {
-  const menu = [
-    { path: ".", label: "Overview", icon: "📊" },
-    { path: "users", label: "Users", icon: "👤" },
-    { path: "problems", label: "Problems", icon: "📘" },
-    { path: "feedback", label: "Feedback", icon: "💬" },
-    { path: "leaderboard", label: "Leaderboard", icon: "🏆" },
-  ];
-
   return (
     <>
-      {sidebarOpen && <div style={styles.overlay} onClick={closeSidebar} />}
+      {sidebarOpen && window.innerWidth <= 768 && (
+        <div style={styles.overlay} onClick={closeSidebar} />
+      )}
 
       <aside
         style={{
@@ -92,23 +118,20 @@ function Sidebar({ sidebarOpen, closeSidebar }) {
         }}
       >
         <nav style={styles.nav}>
-          {menu.map((item) => (
+          {MENU.map(({ path, label, Icon }) => (
             <NavLink
-              key={item.path}
-              to={item.path}
-              end
+              key={path}
+              to={path}
+              end={path === "/admin/dashboard"}
               onClick={closeSidebar}
               style={({ isActive }) => ({
                 ...styles.navItem,
-                background: isActive
-                  ? "rgba(56,189,248,0.12)"
-                  : "transparent",
-                color: isActive ? "#38bdf8" : "#f1f5f9",
-                textDecoration: "none",
+                background: isActive ? color.accentSoft : "transparent",
+                color: isActive ? color.accent : color.textSecondary,
               })}
             >
-              <span style={{ marginRight: 10 }}>{item.icon}</span>
-              {item.label}
+              <Icon size={17} />
+              {label}
             </NavLink>
           ))}
         </nav>
@@ -121,12 +144,14 @@ function Sidebar({ sidebarOpen, closeSidebar }) {
 const styles = {
   app: {
     minHeight: "100vh",
-    background: "#0f172a",
-    color: "#f1f5f9",
+    background: color.bg,
+    color: color.textPrimary,
+    fontFamily: font.ui,
   },
   topbar: {
     height: 60,
-    background: "#020617",
+    background: color.surface,
+    borderBottom: `1px solid ${color.border}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -135,50 +160,66 @@ const styles = {
     top: 0,
     zIndex: 50,
   },
-  logo: { fontWeight: 700 },
+  logo: { fontWeight: 700, fontSize: 15.5, letterSpacing: "-0.01em" },
+  crumbDivider: { color: color.textTertiary, fontSize: 14 },
+  crumbCurrent: { color: color.textSecondary, fontSize: 14, fontWeight: 500 },
   menuBtn: {
-    fontSize: 22,
     background: "none",
     border: "none",
-    color: "#f1f5f9",
+    color: color.textPrimary,
     cursor: "pointer",
+    display: "flex",
+    padding: 4,
   },
   logoutBtn: {
-    background: "#ef4444",
-    border: "none",
-    color: "#fff",
-    padding: "6px 14px",
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    background: "transparent",
+    border: `1px solid ${color.border}`,
+    color: color.textSecondary,
+    padding: "7px 13px",
     borderRadius: 8,
     cursor: "pointer",
+    fontSize: 13.5,
+    fontWeight: 500,
   },
   layout: { display: "flex" },
   sidebar: {
-    width: 240,
-    background: "#020617",
+    width: 232,
+    background: color.surface,
+    borderRight: `1px solid ${color.border}`,
     position: "fixed",
     top: 60,
     bottom: 0,
     left: 0,
-    transition: "transform 0.3s ease",
+    transition: "transform 0.22s ease",
     zIndex: 40,
+    overflowY: "auto",
   },
   nav: {
     display: "flex",
     flexDirection: "column",
-    padding: 16,
+    padding: 14,
+    gap: 3,
   },
   navItem: {
-    padding: "12px 14px",
+    padding: "10px 12px",
     cursor: "pointer",
-    borderRadius: 10,
-    marginBottom: 6,
+    borderRadius: 8,
     display: "flex",
     alignItems: "center",
+    gap: 11,
+    textDecoration: "none",
+    fontSize: 14,
+    fontWeight: 500,
+    transition: "background 0.15s ease, color 0.15s ease",
   },
   content: {
     flex: 1,
-    padding: 20,
-    marginLeft: 240,
+    padding: "28px 28px 40px",
+    marginLeft: 232,
+    minWidth: 0,
   },
   overlay: {
     position: "fixed",
@@ -189,5 +230,6 @@ const styles = {
 };
 
 if (window.innerWidth <= 768) {
+  styles.sidebar.top = 60;
   styles.content.marginLeft = 0;
 }

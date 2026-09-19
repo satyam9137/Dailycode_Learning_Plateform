@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api";
+import { color, font, card as cardToken, input as inputToken, buttonPrimary, buttonDanger, buttonGhost } from "./theme";
 
 export default function AddLevelWithTestCases() {
   const [level, setLevel] = useState({
@@ -68,7 +69,7 @@ export default function AddLevelWithTestCases() {
 
   return (
     <form onSubmit={handleSubmit} style={styles.page}>
-      <h2 style={styles.pageTitle}>➕ Create New Level</h2>
+      <h2 style={styles.pageTitle}>Create new level</h2>
 
       {/* ================= LEVEL INFO ================= */}
       <section style={styles.section}>
@@ -176,20 +177,20 @@ export default function AddLevelWithTestCases() {
                 onClick={() => removeTestCase(i)}
                 style={styles.removeBtn}
               >
-                ❌ Remove Test Case
+                Remove test case
               </button>
             )}
           </div>
         ))}
 
         <button type="button" onClick={addTestCase} style={styles.addBtn}>
-          + Add Another Test Case
+          + Add another test case
         </button>
       </section>
 
       {/* ================= SUBMIT ================= */}
       <button type="submit" style={styles.submitBtn}>
-        🚀 Create Level
+        Create level
       </button>
     </form>
   );
@@ -199,27 +200,24 @@ export default function AddLevelWithTestCases() {
 
 const styles = {
   page: {
-    background: "#0f172a",
-    minHeight: "100vh",
-    padding: 24,
-    color: "white",
     maxWidth: 900,
   },
   pageTitle: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 17,
+    fontWeight: 600,
+    marginBottom: 16,
+    color: color.textPrimary,
   },
   section: {
-    background: "#020617",
+    ...cardToken,
     padding: 18,
-    borderRadius: 12,
-    marginBottom: 20,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
+    marginBottom: 18,
   },
   sectionTitle: {
-    color: "#38bdf8",
+    color: color.accent,
     marginBottom: 16,
-    fontSize: 18,
+    fontSize: 14,
+    fontWeight: 600,
   },
   row: {
     display: "flex",
@@ -234,56 +232,38 @@ const styles = {
   label: {
     fontSize: 13,
     marginBottom: 6,
-    color: "#94a3b8",
+    color: color.textSecondary,
   },
   input: {
-    background: "#0f172a",
-    border: "1px solid #1e293b",
-    borderRadius: 8,
-    padding: "10px 12px",
-    color: "white",
+    ...inputToken,
   },
   textarea: {
-    background: "#0f172a",
-    border: "1px solid #1e293b",
-    borderRadius: 8,
-    padding: 12,
-    color: "white",
+    ...inputToken,
     minHeight: 90,
+    fontFamily: font.mono,
+    resize: "vertical",
   },
   testCase: {
-    background: "#0f172a",
-    border: "1px solid #1e293b",
+    background: color.bg,
+    border: `1px solid ${color.border}`,
     borderRadius: 10,
     padding: 14,
     marginBottom: 14,
   },
   addBtn: {
-    background: "#38bdf8",
-    border: "none",
-    color: "#020617",
-    padding: "8px 14px",
-    borderRadius: 8,
-    cursor: "pointer",
-    fontWeight: 600,
+    ...buttonGhost,
+    color: color.accent,
+    borderColor: color.accentBorder,
   },
   removeBtn: {
-    background: "#ef4444",
-    border: "none",
-    color: "white",
-    padding: "6px 12px",
-    borderRadius: 6,
-    cursor: "pointer",
+    ...buttonDanger,
     marginTop: 6,
   },
   submitBtn: {
+    ...buttonPrimary,
     width: "100%",
-    background: "#22c55e",
-    border: "none",
     padding: "12px",
-    fontSize: 16,
-    borderRadius: 12,
-    fontWeight: 700,
-    cursor: "pointer",
+    fontSize: 15,
+    borderRadius: 10,
   },
 };

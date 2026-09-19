@@ -1,114 +1,96 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import { PageHeader, EmptyState, SkeletonRows, Avatar, TableCard, tableStyles } from "../AdminPannel/ui";
+import { color, font } from "../AdminPannel/theme";
+import { TrophyIcon } from "../AdminPannel/icons";
+
+const RANK_COLOR = { 1: color.gold, 2: color.silver, 3: color.bronze };
 
 export default function Leaderboard() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // 🔥 LOGGED-IN USER EMAIL
-  const loggedEmail = localStorage.getItem("email");
+  const [rows, setRows] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadLeaderboard();
+    load();
   }, []);
 
-  const loadLeaderboard = async () => {
+  const load = async () => {
     try {
       const res = await api.get("/leaderboard");
-      setUsers(res.data);
+      setRows(res.data);
     } catch (err) {
-      console.error("Leaderboard error", err);
-    } finally {
-      setLoading(false);
+      console.error("LEADERBOARD ERROR:", err);
+      setError("Couldn't load the leaderboard.");
     }
   };
 
-  if (loading) {
-    return <h2 style={{ padding: 20 }}>Loading leaderboard...</h2>;
-  }
-
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>🏆 Leaderboard</h2>
+    <div>
+      <PageHeader
+        title="Leaderboard"
+        subtitle={rows ? `${rows.length} ranked solvers` : "Loading…"}
+      />
 
-      <div style={styles.card}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Rank</th>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Email</th>
-              <th style={styles.th}>Level</th>
-            </tr>
-          </thead>
+      <TableCard>
+        {error && <EmptyState title="Something went wrong" hint={error} />}
+        {!error && rows === null && <SkeletonRows rows={6} />}
+        {!error && rows && rows.length === 0 && (
+          <EmptyState
+            title="No ranked solvers yet"
+            hint="Users appear here once they start solving problems."
+          />
+        )}
 
-          <tbody>
-            {users.map((u, index) => (
-              <tr
-                key={u.user_id || u.id}
-                style={{
-                  ...styles.row,
-                  ...(u.email === loggedEmail ? styles.myRow : {}),
-                }}
-              >
-                <td style={styles.td}>#{index + 1}</td>
-                <td style={styles.td}>{u.name}</td>
-                <td style={styles.td}>{u.email}</td>
-                <td style={{ ...styles.td, fontWeight: 700 }}>
-                  {u.current_level}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        {!error && rows && rows.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            <table style={tableStyles.table}>
+              <thead>
+                <tr>
+                  <th style={tableStyles.th}>Rank</th>
+                  <th style={tableStyles.th}>User</th>
+                  <th style={tableStyles.th}>Email</th>
+                  <th style={{ ...tableStyles.th, textAlign: "right" }}>Current level</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => {
+                  const rank = i + 1;
+                  const medal = RANK_COLOR[rank];
+                  return (
+                    <tr key={r.user_id ?? i}>
+                      <td style={tableStyles.td}>
+                        <span
+                          style={{
+                            fontFamily: font.mono,
+                            fontWeight: 700,
+                            color: medal || color.textSecondary,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          {medal && <TrophyIcon size={14} color={medal} />}
+                          {String(rank).padStart(2, "0")}
+                        </span>
+                      </td>
+                      <td style={tableStyles.td}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Avatar name={r.name} />
+                          <span style={{ fontWeight: 500 }}>{r.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ ...tableStyles.td, color: color.textSecondary }}>{r.email}</td>
+                      <td style={{ ...tableStyles.td, textAlign: "right", fontFamily: font.mono, color: color.accent, fontWeight: 700 }}>
+                        {r.current_level ?? 0}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </TableCard>
     </div>
   );
 }
-
-/* ================= STYLES ================= */
-
-const styles = {
-  container: {
-    padding: 24,
-    background: "#0f172a",
-    minHeight: "100vh",
-  },
-  heading: {
-    color: "#e5e7eb",
-    fontSize: 24,
-    marginBottom: 16,
-  },
-  card: {
-    background: "#020617",
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  th: {
-    textAlign: "left",
-    padding: 12,
-    color: "#38bdf8",
-    borderBottom: "1px solid #1e293b",
-  },
-  td: {
-    padding: 12,
-    color: "#f1f5f9",
-    borderBottom: "1px solid #1e293b",
-  },
-  row: {
-    background: "#0f172a",
-  },
-
-  // 🔥 HIGHLIGHTED ROW
-  myRow: {
-    background:
-      "linear-gradient(90deg, rgba(56,189,248,0.35), rgba(34,211,238,0.15))",
-    boxShadow: "inset 0 0 12px rgba(56,189,248,0.45)",
-    fontWeight: "bold",
-  },
-};

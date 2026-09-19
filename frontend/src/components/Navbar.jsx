@@ -2,13 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./navbar.css";
 //import UserDash from "../pages/userDash";   
-
 export default function Navbar({ isLogin, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-
   const email = localStorage.getItem("email");
-
   const [name, setName] = useState("");
 
   useEffect(() => {
@@ -17,7 +14,6 @@ export default function Navbar({ isLogin, onLogout }) {
   }, []);
 
   const firstLetter = name ? name.trim().charAt(0).toUpperCase() : "U";
-
   const links = [
     { name: "Home", id: "homePage" },
     { name: "About Us", id: "About" },
@@ -27,10 +23,7 @@ export default function Navbar({ isLogin, onLogout }) {
 
   return (
     <nav className="navbar">
-      {/* LOGO */}
       <Link to="/" style={styles.logo}>DailyCode</Link>
-
-      {/* NAV LINKS */}
       <ul className={`nav-links ${menuOpen ? "active" : ""}`}>
         {links.map((link, i) => (
           <li key={i}>

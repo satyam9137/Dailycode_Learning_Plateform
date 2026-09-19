@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import axios from "axios";
-import api from "../api";  
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 export default function AuthPage({ onSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -37,7 +35,6 @@ export default function AuthPage({ onSuccess }) {
       return "";
     },
   };
-
   const handleForm = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setMessage("");
@@ -70,43 +67,33 @@ export default function AuthPage({ onSuccess }) {
       if (isLogin) {
         // 🔐 LOGIN
 
-        
-        const res = await axios.post("/auth/login", 
+        const res = await api.post("/auth/login",
           {
-          email: form.email,
-          password: form.password,
-        });
+            email: form.email,
+            password: form.password,
+          });
         console.log("LOGIN RESPONSE 👉", res.data);
-        // ✅ SAVE LOGIN STATE
-        // localStorage.setItem("isLogin", "true");
-        // localStorage.setItem("userId", res.data.userId);
-        // localStorage.setItem("name", res.data.name);
-        // // 🔥 MOST IMPORTANT LINE
-        // localStorage.setItem("email", form.email);
-        // //onSuccess(); // parent (Main.jsx) update karega
-        // //navigate("/");
-
         localStorage.setItem("isLogin", "true");
-localStorage.setItem("token", res.data.token);
-localStorage.setItem("userId", res.data.userId);
-localStorage.setItem("name", res.data.name);
-localStorage.setItem("email", form.email);
-localStorage.setItem("role", res.data.role); // 🔥 IMPORTANT
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userId", res.data.userId);
+        localStorage.setItem("name", res.data.name);
+        localStorage.setItem("email", form.email);
+        localStorage.setItem("role", res.data.role); // 🔥 IMPORTANT
 
-if (onSuccess) {
-  onSuccess();
-}
+        if (onSuccess) {
+          onSuccess();
+        }
 
-// 🔀 ROLE BASED REDIRECT
-if (res.data.role === "admin") {
-  navigate("/admin/dashboard");
-} else {
-  navigate("/");
-}
+        // 🔀 ROLE BASED REDIRECT
+        if (res.data.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
 
       } else {
         // 📝 SIGNUP
-        const res = await axios.post("/auth/signup", {
+        const res = await api.post("/auth/signup", {
           name: form.name,
           email: form.email,
           password: form.password,
@@ -115,15 +102,15 @@ if (res.data.role === "admin") {
         alert(res.data.message);
         setIsLogin(true);
       }
-    }catch (err) {
-    // ✅ ONLY REAL API ERRORS
-    if (err.response) {
-      setMessage(err.response.data.message);
-    } else {
-      console.log("Non-API error 👉", err);
+    } catch (err) {
+      // ✅ ONLY REAL API ERRORS
+      if (err.response) {
+        setMessage(err.response.data.message);
+      } else {
+        console.log("Non-API error 👉", err);
+      }
     }
-  }
-};
+  };
 
   return (
     <div id="auth" style={styles.container}>
@@ -131,13 +118,11 @@ if (res.data.role === "admin") {
         <h2 style={styles.title}>
           {isLogin ? "Welcome Back 👋" : "Create Account 🚀"}
         </h2>
-
         <p style={styles.subtitle}>
           {isLogin
             ? "Login to continue your DailyCode journey"
             : "Register to start your DailyCode journey"}
         </p>
-
         {message && <p style={{ color: "red" }}>{message}</p>}
 
         <form style={styles.form} onSubmit={handleSubmit}>
@@ -151,7 +136,6 @@ if (res.data.role === "admin") {
               style={styles.input}
             />
           )}
-
           <input
             type="email"
             name="email"
@@ -207,7 +191,6 @@ if (res.data.role === "admin") {
     </div>
   );
 }
-
 const styles = {
   container: {
     height: "100vh",

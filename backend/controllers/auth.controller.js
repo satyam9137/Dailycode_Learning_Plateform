@@ -25,7 +25,7 @@ export const signup = async (req, res) => {
 
     // insert into registration
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')",
       [name, email, hashedPassword]
     );
 
@@ -100,7 +100,7 @@ export const login = async (req, res) => {
 
   const token = jwt.sign(
     { id: user.user_id, role: user.role },
-    "SECRET_KEY",
+    process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
 

@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import api from "../api";
 import AddLevelWithTestCases from "../AdminPannel/AddLevelWithTestCases";
+import { PageHeader, EmptyState, SkeletonRows, Badge, TableCard, tableStyles } from "../AdminPannel/ui";
+import { color, font, buttonPrimary, buttonGhost, buttonDanger } from "../AdminPannel/theme";
+import { PlusIcon, TrashIcon } from "../AdminPannel/icons";
+
+const DIFFICULTY_TONE = { easy: "success", medium: "warning", hard: "danger" };
 
 export default function Problems() {
-  const [problems, setProblems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [problems, setProblems] = useState(null);
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
     loadProblems();
-    const onResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const loadProblems = async () => {
@@ -21,13 +23,12 @@ export default function Problems() {
       setProblems(res.data);
     } catch (err) {
       console.error("PROBLEMS ERROR:", err);
-    } finally {
-      setLoading(false);
+      setError("Couldn't load problems.");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this problem?")) return;
+    if (!window.confirm("Delete this problem? This can't be undone.")) return;
     try {
       await api.delete(`/problems/${id}`);
       setProblems((prev) => prev.filter((p) => p.id !== id));
@@ -36,202 +37,122 @@ export default function Problems() {
     }
   };
 
-  if (loading) {
-    return <h2 style={{ color: "#fff", padding: 20 }}>Loading problems...</h2>;
-  }
-
   return (
-    <div style={styles.container}>
-      {/* HEADER */}
-      <div style={styles.header}>
-        <h2 style={styles.heading}>📘 Problems</h2>
+    <div>
+      <PageHeader title="Problems" subtitle={problems ? `${problems.length} levels` : "Loading…"}>
         <button
-          style={styles.addBtn}
+          style={showForm ? buttonGhost : buttonPrimary}
           onClick={() => setShowForm((p) => !p)}
         >
-          {showForm ? "❌ Close Form" : "➕ Add Problem"}
+          {showForm ? "Close form" : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <PlusIcon size={14} /> Add problem
+            </span>
+          )}
         </button>
-      </div>
+      </PageHeader>
 
       {showForm && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 24 }}>
           <AddLevelWithTestCases />
           <button
-            style={{ ...styles.addBtn, marginTop: 10 }}
+            style={{ ...buttonGhost, marginTop: 12 }}
             onClick={() => {
               setShowForm(false);
               loadProblems();
             }}
           >
-            🔄 Refresh List
+            Refresh list
           </button>
         </div>
       )}
 
-      <div style={styles.card}>
-        {problems.length === 0 ? (
-          <p style={{ color: "#94a3b8" }}>No problems found</p>
-        ) : isMobile ? (
-          /* ========== MOBILE VIEW ========== */
-          <div style={styles.mobileList}>
-            {problems.map((p) => (
-              <div key={p.id} style={styles.mobileCard}>
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Title</span>
-                  <span>{p.title}</span>
-                </div>
+      <TableCard>
+        {error && <EmptyState title="Something went wrong" hint={error} />}
+        {!error && problems === null && <SkeletonRows rows={5} />}
+        {!error && problems && problems.length === 0 && (
+          <EmptyState title="No problems yet" hint="Add your first level to get started." />
+        )}
 
-                <div style={styles.mobileRow}>
-                  <span style={styles.label}>Test Cases</span>
-                  <pre style={styles.code}>
-                    {p.test_cases || "No test cases"}
-                  </pre>
-                </div>
-
-                <button
-                  style={styles.deleteBtn}
-                  onClick={() => handleDelete(p.id)}
-                >
-                  🗑 Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* ========== DESKTOP TABLE ========== */
+        {!error && problems && problems.length > 0 && (
           <div style={{ overflowX: "auto" }}>
-            <table style={styles.table}>
+            <table style={tableStyles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>ID</th>
-                  <th style={styles.th}>Title</th>
-                  <th style={styles.th}>Test Cases</th>
-                  <th style={styles.th}>Actions</th>
+                  <th style={tableStyles.th}>Level</th>
+                  <th style={tableStyles.th}>Title</th>
+                  <th style={tableStyles.th}>Difficulty</th>
+                  <th style={tableStyles.th}>Test cases</th>
+                  <th style={{ ...tableStyles.th, textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {problems.map((p, i) => (
-                  <tr key={p.id} style={i % 2 ? styles.rowAlt : styles.row}>
-                    <td style={styles.td}>{p.id}</td>
-                    <td style={styles.td}>{p.title}</td>
-                    <td style={styles.td}>
-                      <pre style={styles.code}>
-                        {p.test_cases || "No test cases"}
-                      </pre>
-                    </td>
-                    <td style={styles.td}>
-                      <button
-                        style={styles.deleteBtn}
-                        onClick={() => handleDelete(p.id)}
-                      >
-                        🗑 Delete
-                      </button>
-                    </td>
-                  </tr>
+                {problems.map((p) => (
+                  <Fragment key={p.id}>
+                    <tr>
+                      <td style={{ ...tableStyles.td, fontFamily: font.mono, color: color.accent, fontWeight: 700 }}>
+                        {String(p.level_no ?? p.id).padStart(2, "0")}
+                      </td>
+                      <td style={tableStyles.td}>{p.title}</td>
+                      <td style={tableStyles.td}>
+                        {p.difficulty ? (
+                          <Badge tone={DIFFICULTY_TONE[p.difficulty?.toLowerCase()] || "neutral"}>
+                            {p.difficulty}
+                          </Badge>
+                        ) : (
+                          <span style={{ color: color.textTertiary }}>—</span>
+                        )}
+                      </td>
+                      <td style={tableStyles.td}>
+                        <button
+                          onClick={() => setExpanded(expanded === p.id ? null : p.id)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: color.accent,
+                            cursor: "pointer",
+                            fontSize: 13.5,
+                            padding: 0,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {p.test_case_count ?? 0} case{p.test_case_count === 1 ? "" : "s"}
+                          {" "}{expanded === p.id ? "▲" : "▾"}
+                        </button>
+                      </td>
+                      <td style={{ ...tableStyles.td, textAlign: "right" }}>
+                        <button style={buttonDanger} onClick={() => handleDelete(p.id)}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                            <TrashIcon /> Delete
+                          </span>
+                        </button>
+                      </td>
+                    </tr>
+                    {expanded === p.id && (
+                      <tr>
+                        <td colSpan={5} style={{ ...tableStyles.td, background: "#0d1730" }}>
+                          <pre style={styles.code}>{p.test_cases || "No test cases"}</pre>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </TableCard>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
-
 const styles = {
-  container: {
-    padding: 24,
-    background: "#0f172a",
-    minHeight: "100vh",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  heading: {
-    color: "#e5e7eb",
-    fontSize: 22,
-  },
-  addBtn: {
-    background: "#22c55e",
-    border: "none",
-    color: "#020617",
-    padding: "8px 14px",
-    borderRadius: 8,
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  card: {
-    background: "#020617",
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
-  },
-  table: {
-    width: "100%",
-    minWidth: 800,
-    borderCollapse: "collapse",
-  },
-  th: {
-    padding: 12,
-    color: "#38bdf8",
-    borderBottom: "1px solid #1e293b",
-    textAlign: "left",
-    fontSize: 13,
-  },
-  td: {
-    padding: 12,
-    color: "#f1f5f9",
-    borderBottom: "1px solid #1e293b",
-    verticalAlign: "top",
-  },
-  row: { background: "#0f172a" },
-  rowAlt: { background: "#020617" },
-
-  /* MOBILE */
-  mobileList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 14,
-  },
-  mobileCard: {
-    background: "#0f172a",
-    borderRadius: 10,
-    padding: 14,
-    border: "1px solid #1e293b",
-  },
-  mobileRow: {
-    display: "flex",
-    flexDirection: "column",
-    marginBottom: 8,
-  },
-  label: {
-    color: "#38bdf8",
-    fontSize: 12,
-    textTransform: "uppercase",
-  },
   code: {
-    background: "#020617",
-    padding: 8,
-    borderRadius: 6,
-    fontSize: 13,
+    margin: 0,
+    fontFamily: font.mono,
+    fontSize: 12.5,
     whiteSpace: "pre-wrap",
-    color: "#e5e7eb",
-  },
-  deleteBtn: {
-    background: "#ef4444",
-    border: "none",
-    color: "#fff",
-    padding: "6px 12px",
-    borderRadius: 6,
-    cursor: "pointer",
-    fontWeight: 600,
-    marginTop: 8,
+    color: color.textSecondary,
+    lineHeight: 1.6,
   },
 };

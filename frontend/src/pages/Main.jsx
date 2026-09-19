@@ -64,8 +64,6 @@ export default function Main() {
     </div>
   );
 }
-
-
 const styles = {
   overlay: {
     position: "fixed",
