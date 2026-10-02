@@ -2,15 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import api from "../api";
 import CodeEditor from "./CodeEditor";
 import LevelsSidebar from "./LevelsSidebar";
+import logoIcon from "../assets/logo-icon.png";
 
 export default function App() {
   const userId = localStorage.getItem("userId");
-  const [levels, setLevels] = useState([]);
 
-  // FIX: split "highest level unlocked" from "level currently being viewed".
-  // The original code used a single `currentLevel` for both, which caused
-  // fetch/submit calls to silently target the wrong level when a user
-  // browsed back to review an earlier unlocked level.
+  const [levels, setLevels] = useState([]);
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [viewingLevel, setViewingLevel] = useState(1);
 
@@ -24,7 +21,9 @@ export default function App() {
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  /* 🔹 Load levels sidebar (also reusable so we can refresh after unlocking a new level) */
+  /* =========================
+     LOAD LEVELS
+  ========================= */
   const loadLevels = useCallback(() => {
     return api
       .get(`/levels/${userId}`)
@@ -41,10 +40,16 @@ export default function App() {
     loadLevels();
   }, [loadLevels]);
 
-  /* 🔹 Load the level currently being viewed (not just "the" current level) */
+  /* =========================
+     LOAD CURRENT LEVEL
+  ========================= */
   const loadLevel = useCallback(() => {
     return api
-      .get(`/level/${userId}`, { params: { level: viewingLevel } })
+      .get(`/level/${userId}`, {
+        params: {
+          level: viewingLevel,
+        },
+      })
       .then((res) => {
         setLevel(res.data.level);
         setSampleTest(res.data.sampleTest);
@@ -58,75 +63,240 @@ export default function App() {
   }, [userId, viewingLevel]);
 
   useEffect(() => {
-    if (viewingLevel) loadLevel();
+    if (viewingLevel) {
+      loadLevel();
+    }
   }, [loadLevel, viewingLevel]);
 
+  /* =========================
+     RETRY
+  ========================= */
   const handleRetry = () => {
     setError("");
     loadLevels();
     loadLevel();
   };
 
+  /* =========================
+     ERROR
+  ========================= */
   if (error) {
     return (
-      <div style={{ padding: 20 }}>
+      <div style={styles.errorPage}>
         <h2>{error}</h2>
-        <button style={{ ...styles.btn, ...styles.runBtn }} onClick={handleRetry}>
+
+        <button
+          style={{
+            ...styles.btn,
+            ...styles.runBtn,
+          }}
+          onClick={handleRetry}
+        >
           Retry
         </button>
       </div>
     );
   }
-  if (!level) return <h2 style={{ padding: 20 }}>Loading...</h2>;
+
+  /* =========================
+     LOADING
+  ========================= */
+  if (!level) {
+    return (
+      <div style={styles.loadingPage}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>
+      {/* =========================
+          RESPONSIVE CSS
+      ========================= */}
       <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
         @media (max-width: 900px) {
-          .dc-menu-btn { display: inline-block !important; }
-          .dc-close-btn { display: inline-block !important; }
+          .dc-menu-btn {
+            display: inline-block !important;
+          }
+
+          .dc-close-btn {
+            display: inline-block !important;
+          }
+
           .dc-sidebar {
-            position: fixed;
-            top: 60px;
-            left: -280px;
-            height: calc(100vh - 60px);
-            width: 280px;
-            z-index: 40;
+            position: fixed !important;
+            top: 68px !important;
+            left: -280px !important;
+            height: calc(100vh - 68px) !important;
+            width: 280px !important;
+            z-index: 100 !important;
             transition: left 0.25s ease;
           }
-          .dc-sidebar.dc-sidebar-open { left: 0; }
-          .dc-navbar { flex-wrap: wrap; row-gap: 8px; }
-          .dc-io-grid { grid-template-columns: 1fr !important; }
+
+          .dc-sidebar.dc-sidebar-open {
+            left: 0 !important;
+          }
+
+          .dc-navbar {
+            flex-wrap: wrap;
+            row-gap: 8px;
+          }
+
+          .dc-io-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
 
         @media (max-width: 600px) {
-          .dc-navbar { padding: 10px 12px !important; }
-          .dc-logo { font-size: 1.2rem !important; }
-          .dc-lang-label { display: none; }
-          .dc-main { padding: 10px !important; }
-          .dc-card, .dc-editor-card, .dc-io-card, .dc-submit-result-card { padding: 12px !important; }
-          .dc-card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-          .dc-editor-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-          .dc-btn-row { width: 100%; }
-          .dc-btn { flex: 1; }
-          .dc-editor-box { min-height: 240px !important; }
-          .dc-textarea { width: 100% !important; box-sizing: border-box; }
+          .dc-navbar {
+            padding: 10px 12px !important;
+          }
+
+          .dc-logo {
+            font-size: 1.2rem !important;
+          }
+
+          .dc-logo-icon {
+            width: 34px !important;
+            height: 34px !important;
+          }
+
+          .dc-tagline {
+            font-size: 0.4rem !important;
+          }
+
+          .dc-lang-label {
+            display: none;
+          }
+
+          .dc-main {
+            padding: 10px !important;
+          }
+
+          .dc-card,
+          .dc-editor-card,
+          .dc-io-card,
+          .dc-submit-result-card {
+            padding: 12px !important;
+          }
+
+          .dc-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+
+          .dc-editor-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+
+          .dc-btn-row {
+            width: 100%;
+          }
+
+          .dc-btn {
+            flex: 1;
+          }
+
+          .dc-editor-box {
+            min-height: 240px !important;
+          }
+
+          .dc-textarea {
+            width: 100% !important;
+            box-sizing: border-box;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .dc-brand-text {
+            display: none !important;
+          }
+
+          .dc-lang-box {
+            margin-left: auto;
+          }
         }
       `}</style>
 
-      {/* ✅ Top Navbar */}
-      <div className="dc-navbar" style={styles.navbar}>
+      {/* =========================
+          TOP NAVBAR
+      ========================= */}
+      <div
+        className="dc-navbar"
+        style={styles.navbar}
+      >
+        {/* Mobile Menu Button */}
         <button
           className="dc-menu-btn"
           style={styles.menuBtn}
           onClick={() => setSidebarOpen((prev) => !prev)}
+          aria-label="Open menu"
         >
           ☰
         </button>
 
-        <h1 className="dc-logo" style={styles.logo}>Dailycode</h1>
-        <div style={styles.langBox}>
-          <span className="dc-lang-label" style={styles.langLabel}>Language:</span>
+        {/* =========================
+            DAILYCODE BRAND
+        ========================= */}
+        <div
+          className="dc-brand"
+          style={styles.brand}
+        >
+          <img
+            src={logoIcon}
+            alt="DailyCode Logo"
+            className="dc-logo-icon"
+            style={styles.logoIcon}
+          />
+
+          <div
+            className="dc-brand-text"
+            style={styles.brandText}
+          >
+            <div
+              className="dc-logo"
+              style={styles.logo}
+            >
+              <span style={styles.daily}>Daily</span>
+              <span style={styles.codeText}>Code</span>
+            </div>
+
+            <div
+              className="dc-tagline"
+              style={styles.tagline}
+            >
+              ONLINE CODING PLATFORM
+            </div>
+          </div>
+        </div>
+
+        {/* =========================
+            LANGUAGE SELECTOR
+        ========================= */}
+        <div
+          className="dc-lang-box"
+          style={styles.langBox}
+        >
+          <span
+            className="dc-lang-label"
+            style={styles.langLabel}
+          >
+            Language:
+          </span>
+
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -140,17 +310,27 @@ export default function App() {
         </div>
       </div>
 
+      {/* =========================
+          MAIN LAYOUT
+      ========================= */}
       <div style={styles.layout}>
-        {/* ✅ SIDEBAR */}
+        {/* =========================
+            SIDEBAR
+        ========================= */}
         <div
-          className={`dc-sidebar${sidebarOpen ? " dc-sidebar-open" : ""}`}
+          className={`dc-sidebar${
+            sidebarOpen ? " dc-sidebar-open" : ""
+          }`}
           style={{
             ...styles.sidebar,
             ...(sidebarOpen ? styles.sidebarOpen : {}),
           }}
         >
           <div style={styles.sidebarHeader}>
-            <h3 style={{ margin: 0 }}>Levels</h3>
+            <h3 style={styles.levelHeading}>
+              Levels
+            </h3>
+
             <button
               className="dc-close-btn"
               style={styles.closeBtn}
@@ -164,8 +344,6 @@ export default function App() {
             levels={levels}
             currentLevel={unlockedLevel}
             onSelectLevel={(lvl) => {
-              // FIX: gate against unlockedLevel (progress), not the level
-              // currently being viewed, so users can browse any unlocked level.
               if (lvl <= unlockedLevel) {
                 setViewingLevel(lvl);
                 setSidebarOpen(false);
@@ -174,63 +352,116 @@ export default function App() {
           />
         </div>
 
-        {/* ✅ MAIN AREA */}
-        <div className="dc-main" style={styles.main}>
-          {/* ✅ Problem Card */}
-          <div className="dc-card" style={styles.card}>
-            <div className="dc-card-header" style={styles.cardHeader}>
+        {/* =========================
+            MAIN AREA
+        ========================= */}
+        <div
+          className="dc-main"
+          style={styles.main}
+        >
+          {/* =========================
+              PROBLEM CARD
+          ========================= */}
+          <div
+            className="dc-card"
+            style={styles.card}
+          >
+            <div
+              className="dc-card-header"
+              style={styles.cardHeader}
+            >
               <h2 style={styles.title}>
                 Level {level.level_no}: {level.title}
               </h2>
 
-              <span style={styles.badge}>Unlocked ✅</span>
+              <span style={styles.badge}>
+                Unlocked ✅
+              </span>
             </div>
-            <p style={styles.desc}>{level.description}</p>
+
+            <p style={styles.desc}>
+              {level.description}
+            </p>
           </div>
+
+          {/* =========================
+              YOUTUBE EXPLANATION
+          ========================= */}
           {level.youtube_link && (
             <a
               href={level.youtube_link}
               target="_blank"
               rel="noreferrer"
-              style={{ color: "#38bdf8" }}
+              style={styles.youtubeLink}
             >
               ▶ Watch Explanation
             </a>
           )}
+
+          {/* =========================
+              SAMPLE INPUT
+          ========================= */}
           {sampleTest && (
-            <div className="dc-card" style={styles.card}>
-              <h4 style={{ color: "#38bdf8" }}>Sample Input</h4>
-              <pre>{sampleTest.input_data}</pre>
+            <div
+              className="dc-card"
+              style={styles.card}
+            >
+              <h4 style={styles.sampleTitle}>
+                Sample Input
+              </h4>
+
+              <pre style={styles.sampleInput}>
+                {sampleTest.input_data}
+              </pre>
             </div>
           )}
-          {/* ✅ Editor Card */}
-          <div className="dc-editor-card" style={styles.editorCard}>
-            <div className="dc-editor-header" style={styles.editorHeader}>
-              <h3 style={{ margin: 0 }}>Editor</h3>
 
-              <div className="dc-btn-row" style={styles.btnRow}>
+          {/* =========================
+              EDITOR CARD
+          ========================= */}
+          <div
+            className="dc-editor-card"
+            style={styles.editorCard}
+          >
+            <div
+              className="dc-editor-header"
+              style={styles.editorHeader}
+            >
+              <h3 style={styles.editorTitle}>
+                Editor
+              </h3>
+
+              <div
+                className="dc-btn-row"
+                style={styles.btnRow}
+              >
+                {/* RUN */}
                 <button
                   className="dc-btn"
-                  style={{ ...styles.btn, ...styles.runBtn }}
+                  style={{
+                    ...styles.btn,
+                    ...styles.runBtn,
+                  }}
                   onClick={async () => {
                     if (!input.trim()) {
                       alert("Input required for Run");
                       return;
                     }
+
                     try {
                       const res = await api.post("/run", {
                         code,
                         language,
                         input,
                       });
+
                       setOutput(res.data.output);
                     } catch (err) {
-                      // FIX: Run had no error handling before; a failed
-                      // request just silently did nothing.
                       console.error(err);
+
                       alert(
                         err.response?.data?.error ||
-                        "Run failed. Please try again."
+                          "Run failed. Please try again."
                       );
                     }
                   }}
@@ -238,69 +469,94 @@ export default function App() {
                   ▶ Run
                 </button>
 
+                {/* SUBMIT */}
                 <button
                   className="dc-btn"
-                  style={{ ...styles.btn, ...styles.submitBtn }}
+                  style={{
+                    ...styles.btn,
+                    ...styles.submitBtn,
+                  }}
                   onClick={async () => {
                     if (!userId) {
-                      alert("Please log in before submitting code.");
+                      alert(
+                        "Please log in before submitting code."
+                      );
                       return;
                     }
 
                     setSubmitResult(null);
 
                     try {
-                      const res = await api.post("/submit", {
-                        userId,
-                        code,
-                        language,
-                        level: viewingLevel, // FIX: submit now targets the level being viewed
-                      });
+                      const res = await api.post(
+                        "/submit",
+                        {
+                          userId,
+                          code,
+                          language,
+                          level: viewingLevel,
+                        }
+                      );
 
                       if (res.data?.error) {
                         alert(res.data.error);
                         return;
                       }
 
-                      if (res.data.verdict?.includes("Wrong Answer")) {
+                      /* WRONG ANSWER */
+                      if (
+                        res.data.verdict?.includes(
+                          "Wrong Answer"
+                        )
+                      ) {
                         setSubmitResult({
                           verdict: res.data.verdict,
-                          failed_test: res.data.failed_test,
+                          failed_test:
+                            res.data.failed_test,
                           input: res.data.input,
-                          expected_output: res.data.expected_output,
-                          actual_output: res.data.actual_output,
+                          expected_output:
+                            res.data.expected_output,
+                          actual_output:
+                            res.data.actual_output,
                           tests: res.data.tests,
                         });
+
                         return;
                       }
 
-                      if (res.data.verdict?.includes("Accepted")) {
-                        // FIX: trust the server's next_level instead of blindly
-                        // incrementing, and only advance progress if this
-                        // submission was actually for the current frontier level.
-                        const next = res.data.next_level ?? viewingLevel + 1;
+                      /* ACCEPTED */
+                      if (
+                        res.data.verdict?.includes(
+                          "Accepted"
+                        )
+                      ) {
+                        const next =
+                          res.data.next_level ??
+                          viewingLevel + 1;
 
                         setSubmitResult({
                           verdict: res.data.verdict,
-                          passed_tests: res.data.passed_tests,
+                          passed_tests:
+                            res.data.passed_tests,
                           next_level: next,
                           tests: res.data.tests,
                         });
 
-                        if (viewingLevel >= unlockedLevel) {
+                        if (
+                          viewingLevel >=
+                          unlockedLevel
+                        ) {
                           setUnlockedLevel(next);
                           setViewingLevel(next);
                         }
 
-                        // FIX: refresh the sidebar list so newly unlocked
-                        // levels show up without a full page reload.
                         loadLevels();
                       }
                     } catch (err) {
                       console.error(err);
+
                       alert(
                         err.response?.data?.error ||
-                        "Submission failed. Please try again."
+                          "Submission failed. Please try again."
                       );
                     }
                   }}
@@ -310,73 +566,166 @@ export default function App() {
               </div>
             </div>
 
+            {/* CODE EDITOR */}
             <div style={styles.editorBody}>
-              <div className="dc-editor-box" style={styles.editorBox}>
-                <CodeEditor code={code} setCode={setCode} />
+              <div
+                className="dc-editor-box"
+                style={styles.editorBox}
+              >
+                <CodeEditor
+                  code={code}
+                  setCode={setCode}
+                />
               </div>
             </div>
           </div>
 
-          {/* ✅ IO Section */}
-          <div className="dc-io-grid" style={styles.ioGrid}>
-            <div className="dc-io-card" style={styles.ioCard}>
-              <h4 style={styles.ioTitle}>Your Input (Run only)</h4>
+          {/* =========================
+              INPUT / OUTPUT
+          ========================= */}
+          <div
+            className="dc-io-grid"
+            style={styles.ioGrid}
+          >
+            {/* INPUT */}
+            <div
+              className="dc-io-card"
+              style={styles.ioCard}
+            >
+              <h4 style={styles.ioTitle}>
+                Your Input (Run only)
+              </h4>
+
               <textarea
                 className="dc-textarea"
                 style={styles.textarea}
                 rows={6}
                 value={input}
                 placeholder="Enter your input here..."
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) =>
+                  setInput(e.target.value)
+                }
               />
             </div>
 
-            <div className="dc-io-card" style={styles.ioCard}>
-              <h4 style={styles.ioTitle}>Your Output</h4>
+            {/* OUTPUT */}
+            <div
+              className="dc-io-card"
+              style={styles.ioCard}
+            >
+              <h4 style={styles.ioTitle}>
+                Your Output
+              </h4>
+
               <pre style={styles.outputBox}>
-                {output || "Output will appear here..."}
+                {output ||
+                  "Output will appear here..."}
               </pre>
             </div>
           </div>
 
+          {/* =========================
+              SUBMISSION RESULT
+          ========================= */}
           {submitResult && (
-            <div className="dc-submit-result-card" style={styles.submitResultCard}>
-              <h4 style={styles.ioTitle}>Submission Result</h4>
-              <p style={styles.resultText}>{submitResult.verdict}</p>
+            <div
+              className="dc-submit-result-card"
+              style={styles.submitResultCard}
+            >
+              <h4 style={styles.ioTitle}>
+                Submission Result
+              </h4>
 
+              <p style={styles.resultText}>
+                {submitResult.verdict}
+              </p>
+
+              {/* FAILED TEST */}
               {submitResult.failed_test && (
                 <div style={styles.resultDetails}>
-                  <p>Failed test: {submitResult.failed_test}</p>
-                  <p>Input: {submitResult.input || "(none)"}</p>
-                  <p>Expected: {submitResult.expected_output || "(none)"}</p>
-                  <p>Actual: {submitResult.actual_output || "(none)"}</p>
+                  <p>
+                    Failed test:{" "}
+                    {submitResult.failed_test}
+                  </p>
+
+                  <p>
+                    Input:{" "}
+                    {submitResult.input || "(none)"}
+                  </p>
+
+                  <p>
+                    Expected:{" "}
+                    {submitResult.expected_output ||
+                      "(none)"}
+                  </p>
+
+                  <p>
+                    Actual:{" "}
+                    {submitResult.actual_output ||
+                      "(none)"}
+                  </p>
                 </div>
               )}
 
+              {/* PASSED TESTS */}
               {submitResult.passed_tests && (
                 <div style={styles.resultDetails}>
-                  <p>Passed tests: {submitResult.passed_tests}</p>
-                  <p>Next level: {submitResult.next_level}</p>
+                  <p>
+                    Passed tests:{" "}
+                    {submitResult.passed_tests}
+                  </p>
+
+                  <p>
+                    Next level:{" "}
+                    {submitResult.next_level}
+                  </p>
                 </div>
               )}
 
-              {submitResult.tests && submitResult.tests.length > 0 && (
-                <div style={styles.testList}>
-                  <h5>Level {submitResult.current_level || viewingLevel} test cases</h5>
-                  {submitResult.tests.map((test, index) => (
-                    <div key={test.id || index} style={styles.testItem}>
-                      <strong>Test {index + 1}</strong>
-                      <p>Input: {test.input || "(none)"}</p>
-                      <p>Expected: {test.expected_output || "(none)"}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* TEST LIST */}
+              {submitResult.tests &&
+                submitResult.tests.length > 0 && (
+                  <div style={styles.testList}>
+                    <h5 style={styles.testHeading}>
+                      Level{" "}
+                      {submitResult.current_level ||
+                        viewingLevel}{" "}
+                      test cases
+                    </h5>
+
+                    {submitResult.tests.map(
+                      (test, index) => (
+                        <div
+                          key={test.id || index}
+                          style={styles.testItem}
+                        >
+                          <strong>
+                            Test {index + 1}
+                          </strong>
+
+                          <p>
+                            Input:{" "}
+                            {test.input || "(none)"}
+                          </p>
+
+                          <p>
+                            Expected:{" "}
+                            {test.expected_output ||
+                              "(none)"}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
             </div>
           )}
         </div>
       </div>
 
+      {/* =========================
+          MOBILE OVERLAY
+      ========================= */}
       {sidebarOpen && (
         <div
           style={styles.overlay}
@@ -387,229 +736,439 @@ export default function App() {
   );
 }
 
-/* ✅ CSS-IN-JS (colors unchanged; only fixed the invalid gradient property below) */
+/* =====================================================
+   STYLES
+===================================================== */
+
 const styles = {
+  /* =========================
+     PAGE
+  ========================= */
   page: {
-    background: "#0f172a",
+    background: "#080d1b",
     color: "#f1f5f9",
     minHeight: "100vh",
-    fontFamily: "Inter, sans-serif",
+    fontFamily:
+      "Inter, Arial, sans-serif",
   },
+
+  errorPage: {
+    padding: 30,
+    minHeight: "100vh",
+    background: "#080d1b",
+    color: "#ffffff",
+  },
+
+  loadingPage: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#080d1b",
+    color: "#38bdf8",
+  },
+
+  /* =========================
+     NAVBAR
+  ========================= */
   navbar: {
+    minHeight: 68,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    background: "#1e293b",
+    background: "#080d1b",
     padding: "10px 20px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.4)",
+    boxShadow:
+      "0 4px 15px rgba(0,0,0,0.35)",
+    borderBottom:
+      "1px solid rgba(56,189,248,0.12)",
+    position: "sticky",
+    top: 0,
+    zIndex: 60,
   },
+
+  /* =========================
+     BRAND
+  ========================= */
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  logoIcon: {
+    width: 40,
+    height: 40,
+    objectFit: "contain",
+    flexShrink: 0,
+  },
+
+  brandText: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    lineHeight: 1,
+  },
+
+  logo: {
+    fontSize: "1.55rem",
+    fontWeight: 800,
+    letterSpacing: "0.5px",
+    margin: 0,
+    lineHeight: 1.1,
+  },
+
+  daily: {
+    color: "#00aaff",
+  },
+
+  codeText: {
+    color: "#ffffff",
+  },
+
+  tagline: {
+    color: "#718096",
+    fontSize: "0.48rem",
+    fontWeight: 600,
+    letterSpacing: "1.4px",
+    marginTop: 4,
+  },
+
+  /* =========================
+     MENU
+  ========================= */
   menuBtn: {
     background: "transparent",
-    color: "white",
+    color: "#ffffff",
     border: "none",
     fontSize: 22,
     cursor: "pointer",
     display: "none",
   },
-  logo: {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "#38bdf8",
-  },
+
+  /* =========================
+     LANGUAGE
+  ========================= */
   langBox: {
     display: "flex",
     alignItems: "center",
     gap: 8,
     color: "#38bdf8",
   },
+
   langLabel: {
     fontSize: 14,
     opacity: 0.9,
   },
+
   select: {
-    padding: "6px 10px",
+    padding: "7px 10px",
     borderRadius: 8,
-    border: "1px solid #374151",
-    background: "#1f2937",
-    color: "white",
+    border:
+      "1px solid #334155",
+    background: "#111827",
+    color: "#ffffff",
     outline: "none",
     cursor: "pointer",
   },
+
+  /* =========================
+     LAYOUT
+  ========================= */
   layout: {
     display: "flex",
-    height: "calc(100vh - 60px)",
-    background: "#0f172a",
+    minHeight:
+      "calc(100vh - 68px)",
+    background: "#080d1b",
   },
+
+  /* =========================
+     SIDEBAR
+  ========================= */
   sidebar: {
     width: 280,
-    borderRight: "1px solid #e5e7eb",
+    minWidth: 280,
+    borderRight:
+      "1px solid #1e293b",
     padding: 12,
     overflowY: "auto",
-    background: "#0f172a",
+    background: "#0b1220",
   },
+
+  sidebarOpen: {
+    position: "fixed",
+    top: 68,
+    left: 0,
+    height:
+      "calc(100vh - 68px)",
+    width: 280,
+    zIndex: 100,
+  },
+
   sidebarHeader: {
     display: "flex",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 10,
   },
+
+  levelHeading: {
+    margin: 0,
+    color: "#38bdf8",
+    fontSize: "1.1rem",
+  },
+
   closeBtn: {
     border: "none",
-    background: "#f3f4f6",
+    background: "#1e293b",
+    color: "#ffffff",
     padding: "6px 10px",
     borderRadius: 8,
     cursor: "pointer",
     display: "none",
   },
+
+  /* =========================
+     MAIN
+  ========================= */
   main: {
     flex: 1,
     padding: 16,
     overflowY: "auto",
+    minWidth: 0,
   },
+
+  /* =========================
+     PROBLEM CARD
+  ========================= */
   card: {
     borderRadius: 14,
     padding: 16,
-    background: "#1e293b",
+    background: "#111c2f",
     marginBottom: 14,
+    border:
+      "1px solid rgba(56,189,248,0.08)",
   },
+
   cardHeader: {
     display: "flex",
+    alignItems: "center",
     justifyContent: "space-between",
+    gap: 15,
   },
+
   title: {
     fontSize: 18,
     fontWeight: 700,
     color: "#38bdf8",
+    margin: 0,
   },
+
   badge: {
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
-    padding: "10px 18px",
+    padding: "8px 15px",
     borderRadius: "999px",
-    // FIX: gradients must use `background`, not `backgroundColor`
-    // (backgroundColor silently ignored the value, so the badge had no fill).
-    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-    color: "#fff",
-    fontSize: "14px",
+    background:
+      "linear-gradient(135deg, #22c55e, #16a34a)",
+    color: "#ffffff",
+    fontSize: "13px",
     fontWeight: "600",
-    boxShadow: "0 8px 20px rgba(34, 197, 94, 0.3)",
-    transition: "all 0.3s ease",
+    boxShadow:
+      "0 8px 20px rgba(34,197,94,0.2)",
+    whiteSpace: "nowrap",
   },
+
   desc: {
     marginTop: 10,
-    color: "#374151",
+    color: "#cbd5e1",
+    lineHeight: 1.6,
   },
+
+  youtubeLink: {
+    display: "inline-block",
+    marginBottom: 14,
+    color: "#38bdf8",
+    textDecoration: "none",
+    fontWeight: 600,
+  },
+
+  sampleTitle: {
+    color: "#38bdf8",
+    marginTop: 0,
+  },
+
+  sampleInput: {
+    background: "#0b1220",
+    color: "#e2e8f0",
+    padding: 12,
+    borderRadius: 8,
+    overflowX: "auto",
+  },
+
+  /* =========================
+     EDITOR
+  ========================= */
   editorCard: {
-    background: "white",
+    background: "#ffffff",
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
   },
+
   editorHeader: {
     display: "flex",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 10,
   },
+
+  editorTitle: {
+    margin: 0,
+    color: "#0f172a",
+  },
+
   btnRow: {
     display: "flex",
     gap: 10,
   },
+
   btn: {
     border: "none",
-    padding: "10px 14px",
+    padding: "10px 16px",
     borderRadius: 10,
     cursor: "pointer",
     fontWeight: 700,
+    transition:
+      "transform 0.2s ease, opacity 0.2s ease",
   },
+
   runBtn: {
-    background: "#2563eb",
-    color: "white",
+    background:
+      "linear-gradient(135deg, #2563eb, #0284c7)",
+    color: "#ffffff",
   },
+
   submitBtn: {
-    background: "#16a34a",
-    color: "white",
+    background:
+      "linear-gradient(135deg, #16a34a, #15803d)",
+    color: "#ffffff",
   },
+
   editorBody: {
     borderRadius: 12,
     overflow: "hidden",
     border: "1px solid #0f172a",
   },
+
   editorBox: {
     minHeight: 320,
     background: "#0f172a",
   },
+
+  /* =========================
+     INPUT / OUTPUT
+  ========================= */
   ioGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns:
+      "1fr 1fr",
     gap: 14,
   },
+
   ioCard: {
-    background: "#334155",
+    background: "#111c2f",
     borderRadius: 14,
     padding: 14,
+    border:
+      "1px solid rgba(56,189,248,0.08)",
   },
+
   ioTitle: {
     fontSize: 14,
     fontWeight: 700,
-    color: "#54a0c1",
+    color: "#38bdf8",
+    marginTop: 0,
   },
+
   textarea: {
-    width: "90%",
+    width: "100%",
     borderRadius: 12,
     padding: 12,
     fontFamily: "monospace",
-    background: "#334155",
-    color: "white",
+    background: "#0b1220",
+    color: "#ffffff",
+    border:
+      "1px solid #334155",
+    outline: "none",
+    resize: "vertical",
   },
+
   outputBox: {
-    background: "#334155",
-    padding: 10,
-    borderRadius: 6,
-    color: "#54a0c1",
+    background: "#0b1220",
+    padding: 12,
+    borderRadius: 8,
+    color: "#38bdf8",
+    minHeight: 120,
+    overflowX: "auto",
+    whiteSpace: "pre-wrap",
   },
+
+  /* =========================
+     SUBMISSION RESULT
+  ========================= */
   submitResultCard: {
-    background: "#0f172a",
-    border: "1px solid #334155",
+    background: "#0b1220",
+    border:
+      "1px solid #1e293b",
     borderRadius: 14,
     padding: 16,
     marginTop: 14,
     color: "#e2e8f0",
   },
+
   resultText: {
     margin: "8px 0",
     fontWeight: 700,
     color: "#f8fafc",
   },
+
   resultDetails: {
-    background: "#1e293b",
+    background: "#111c2f",
     borderRadius: 10,
     padding: 12,
     marginTop: 10,
     color: "#d1d5db",
   },
+
   testList: {
     marginTop: 12,
   },
+
+  testHeading: {
+    color: "#38bdf8",
+  },
+
   testItem: {
-    background: "#334155",
+    background: "#1e293b",
     borderRadius: 10,
     padding: 12,
     marginTop: 10,
     color: "#e2e8f0",
   },
+
+  /* =========================
+     OVERLAY
+  ========================= */
   overlay: {
     position: "fixed",
-    top: 60,
+    top: 68,
     left: 0,
     right: 0,
     bottom: 0,
-    background: "rgba(0,0,0,0.4)",
-  },
-  sidebarOpen: {
-    position: "fixed",
-    top: 60,
-    left: 0,
-    height: "calc(100vh - 60px)",
-    width: 280,
+    background:
+      "rgba(0,0,0,0.55)",
+    zIndex: 90,
   },
 };
