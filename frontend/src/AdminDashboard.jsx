@@ -16,6 +16,7 @@ import {
   LogoutIcon,
   MenuIcon,
 } from "./AdminPannel/icons";
+import logoIcon from "./assets/logo-icon.png";
 
 export default function AdminDashboard() {
   return (
@@ -64,6 +65,7 @@ function AdminLayout() {
           >
             <MenuIcon />
           </button>
+          <img src={logoIcon} alt="DailyCode" style={styles.logoIcon} />
           <span style={styles.logo}>DailyCode</span>
           <span style={styles.crumbDivider}>/</span>
           <span style={styles.crumbCurrent}>{active?.label || "Admin"}</span>
@@ -161,6 +163,7 @@ const styles = {
     zIndex: 50,
   },
   logo: { fontWeight: 700, fontSize: 15.5, letterSpacing: "-0.01em" },
+  logoIcon: { height: 28, width: 28, borderRadius: 7, objectFit: "contain", flexShrink: 0 },
   crumbDivider: { color: color.textTertiary, fontSize: 14 },
   crumbCurrent: { color: color.textSecondary, fontSize: 14, fontWeight: 500 },
   menuBtn: {

@@ -1,203 +1,397 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import logoIcon from "../assets/logo-icon.png";
 import "./navbar.css";
-//import UserDash from "../pages/userDash";   
+
 export default function Navbar({ isLogin, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const email = localStorage.getItem("email");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
+
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  /* =========================
+     LOAD USER DATA
+  ========================= */
 
   useEffect(() => {
-    const storedName = localStorage.getItem("name");
-    if (storedName) setName(storedName);
-  }, []);
+    setName(localStorage.getItem("name") || "");
+    setEmail(localStorage.getItem("email") || "");
+    setRole(localStorage.getItem("role") || "");
+  }, [isLogin]);
 
-  const firstLetter = name ? name.trim().charAt(0).toUpperCase() : "U";
+  /* =========================
+     CLOSE PROFILE DROPDOWN
+  ========================= */
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const handleClick = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleKey = (e) => {
+      if (e.key === "Escape") {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [profileOpen]);
+
+  /* =========================
+     USER INITIAL
+  ========================= */
+
+  const firstLetter = name
+    ? name.trim().charAt(0).toUpperCase()
+    : "U";
+
+  /* =========================
+     DASHBOARD
+  ========================= */
+
+  const goToDashboard = () => {
+    setProfileOpen(false);
+
+    if (!localStorage.getItem("token")) {
+      navigate("/login");
+    } else if (role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/userDash");
+    }
+  };
+
+  /* =========================
+     NAVIGATION LINKS
+  ========================= */
+
   const links = [
-    { name: "Home", id: "homePage" },
-    { name: "About Us", id: "About" },
-    { name: "Contact", id: "contact" },
-    { name: "Blog", id: "Blog" },
+    {
+      name: "Home",
+      id: "homePage",
+    },
+    {
+      name: "About Us",
+      id: "About",
+    },
+ 
+    {
+      name: "Blog",
+      id: "Blog",
+    },
+       {
+      name: "Contact Us",
+      id: "contact",
+    },
   ];
+
+  /* =========================
+     CLOSE MOBILE MENU
+  ========================= */
+
+  const handleNavClick = () => {
+    setMenuOpen(false);
+  };
 
   return (
     <nav className="navbar">
-      <Link to="/" style={styles.logo}>DailyCode</Link>
-      <ul className={`nav-links ${menuOpen ? "active" : ""}`}>
+
+      {/* =================================================
+          DAILYCODE BRAND
+      ================================================= */}
+
+      <Link
+        to="/"
+        className="dc-brand"
+        onClick={() => setMenuOpen(false)}
+      >
+
+        {/* LEFT - IMAGE ONLY */}
+        <img
+          src={logoIcon}
+          alt="DailyCode Logo"
+          className="dc-brand-icon"
+        />
+
+        {/* RIGHT - HTML/CSS */}
+        <div className="dc-brand-content">
+
+          <div className="dc-brand-name">
+            <span className="dc-daily">Daily</span>
+            <span className="dc-code">Code</span>
+          </div>
+
+          <div className="dc-brand-tagline">
+            ONLINE CODING PLATFORM
+          </div>
+
+        </div>
+
+      </Link>
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <ul
+        className={`nav-links ${
+          menuOpen ? "active" : ""
+        }`}
+      >
+
         {links.map((link, i) => (
           <li key={i}>
-            <a href={`#${link.id}`} style={styles.link}>
+            <a
+              href={`#${link.id}`}
+              onClick={handleNavClick}
+            >
               {link.name}
             </a>
           </li>
         ))}
 
-        {/* ================= AUTH SECTION ================= */}
+        {/* =================================================
+            AUTH SECTION
+        ================================================= */}
+
         {!isLogin ? (
+
           <li>
-            <Link to="/login" style={styles.link}>
+            <Link
+              to="/login"
+              onClick={handleNavClick}
+            >
               Login
             </Link>
           </li>
+
         ) : (
-          <li style={{ position: "relative" }}>
-            {/* PROFILE ICON */}
-            <div
-              style={styles.avatar}
-              onClick={() => setProfileOpen(!profileOpen)}
+
+          <li
+            className="profile-container"
+            ref={dropdownRef}
+          >
+
+            {/* PROFILE BUTTON */}
+
+            <button
+              className="dc-avatar"
+              onClick={() =>
+                setProfileOpen((p) => !p)
+              }
+              aria-haspopup="true"
+              aria-expanded={profileOpen}
+              aria-label="Open profile menu"
             >
               {firstLetter}
-            </div>
+            </button>
 
-            {profileOpen && (
-              <div style={styles.dropdown}>
-                <p style={styles.profileName}>{name}</p>
-                <p style={styles.profileEmail}>{email}</p>
-                <Link
-                  to="/userDash"
-                  style={{ ...styles.link, display: "block", margin: "10px 0" }}
-                  onClick={() => setProfileOpen(false)}
-                >
-                  View
-                </Link>
+            {/* PROFILE DROPDOWN */}
 
+            <AnimatePresence>
 
-                <hr style={{ margin: "10px 0", borderColor: "#334155" }} />
+              {profileOpen && (
 
-                <button
-                  className="logoutBtn"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    onLogout();
+                <motion.div
+                  className="dc-dropdown"
+
+                  initial={{
+                    opacity: 0,
+                    y: -8,
+                    scale: 0.97,
                   }}
+
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                  }}
+
+                  exit={{
+                    opacity: 0,
+                    y: -8,
+                    scale: 0.97,
+                  }}
+
+                  transition={{
+                    duration: 0.16,
+                    ease: "easeOut",
+                  }}
+
+                  role="menu"
                 >
-                  Logout
-                </button>
-              </div>
-            )}
+
+                  {/* USER INFO */}
+
+                  <div className="dc-dropdown-header">
+
+                    <div className="dc-avatar dc-avatar--static">
+                      {firstLetter}
+                    </div>
+
+                    <div className="dc-dropdown-identity">
+
+                      <p className="dc-dropdown-name">
+                        {name || "User"}
+                      </p>
+
+                      <p className="dc-dropdown-email">
+                        {email}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div className="dc-dropdown-divider" />
+
+                  {/* DASHBOARD */}
+
+                  <button
+                    className="dc-dropdown-item"
+                    onClick={goToDashboard}
+                  >
+                    <DashboardIcon />
+                    View Dashboard
+                  </button>
+
+                  {/* LOGOUT */}
+
+                  <button
+                    className="dc-dropdown-item dc-dropdown-item--danger"
+
+                    onClick={() => {
+                      setProfileOpen(false);
+                      onLogout();
+                      navigate("/login");
+                    }}
+                  >
+                    <LogoutIcon />
+                    Logout
+                  </button>
+
+                </motion.div>
+
+              )}
+
+            </AnimatePresence>
+
           </li>
+
         )}
+
       </ul>
 
-      {/* HAMBURGER */}
+      {/* =================================================
+          MOBILE MENU
+      ================================================= */}
+
       <button
         className="menu-btn"
-        onClick={() => setMenuOpen(!menuOpen)}
+        onClick={() =>
+          setMenuOpen(!menuOpen)
+        }
+        aria-label="Toggle navigation menu"
       >
         {menuOpen ? "✖" : "☰"}
       </button>
+
     </nav>
   );
 }
 
-/* ================= STYLES ================= */
 
-const styles = {
-  navbar: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    background: "rgba(17, 24, 39, 0.85)",
-    backdropFilter: "blur(10px)",
-    color: "white",
-    height: "70px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 2rem",
-    zIndex: 1000,
-  },
+/* =====================================================
+   DASHBOARD ICON
+===================================================== */
 
-  logo: {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    color: "#38bdf8",
-    textDecoration: "none",
-  },
+function DashboardIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect
+        x="3"
+        y="3"
+        width="7"
+        height="9"
+        rx="1.5"
+      />
 
-  navLinks: {
-    listStyle: "none",
-    display: "flex",
-    gap: "2rem",
-    alignItems: "center",
-  },
+      <rect
+        x="14"
+        y="3"
+        width="7"
+        height="5"
+        rx="1.5"
+      />
 
-  link: {
-    color: "white",
-    fontSize: "1.05rem",
-    cursor: "pointer",
-    textDecoration: "none",
-  },
+      <rect
+        x="14"
+        y="12"
+        width="7"
+        height="9"
+        rx="1.5"
+      />
 
-  avatar: {
-    width: "38px",
-    height: "38px",
-    borderRadius: "50%",
-    background: "#38bdf8",
-    color: "#0f172a",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
+      <rect
+        x="3"
+        y="16"
+        width="7"
+        height="5"
+        rx="1.5"
+      />
+    </svg>
+  );
+}
 
-  dropdown: {
-    position: "absolute",
-    top: "45px",
-    right: 0,
-    background: "#0f172a",
-    borderRadius: "8px",
-    padding: "12px",
-    width: "220px",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
-    zIndex: 2000,
-  },
 
-  profileName: {
-    fontWeight: "bold",
-    color: "#38bdf8",
-    marginBottom: "4px",
-  },
+/* =====================================================
+   LOGOUT ICON
+===================================================== */
 
-  profileEmail: {
-    fontSize: "0.85rem",
-    color: "#cbd5e1",
-    wordBreak: "break-all",
-  },
+function LogoutIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
 
-  logoutBtn: {
-    width: "100%",
-    padding: "8px",
-    borderRadius: "6px",
-    border: "none",
-    background: "#ef4444",
-    color: "white",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
+      <path d="M16 17l5-5-5-5" />
 
-  menuBtn: {
-    display: "none",
-    fontSize: "2rem",
-    background: "none",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-  },
-
-  showMenu: {
-    position: "absolute",
-    top: "70px",
-    left: 0,
-    width: "100%",
-    background: "#0f172a",
-    padding: "1rem",
-    listStyle: "none",
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-  },
-};
+      <path d="M21 12H9" />
+    </svg>
+  );
+}

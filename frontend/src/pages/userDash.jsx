@@ -1,13 +1,17 @@
 import Leaderboard from "./Leaderboard";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
+import logoIcon from "../assets/logo-icon.png";
 export default function UserDash() {
     const navigate = useNavigate();
   return (
     <>
  <div>
       <header style={styles.topbar}>
-        <h1 style={styles.logo}>DailyCode</h1>
+        <div style={styles.brand}>
+          <img src={logoIcon} alt="DailyCode" style={styles.logoIcon} />
+          <h1 style={styles.logo}>DailyCode</h1>
+        </div>
        <button
   style={styles.logoutBtn}
   onClick={() => {
@@ -39,13 +43,28 @@ const styles = {
     zIndex: 50,
   },
 
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  logoIcon: {
+    height: 38,
+    width: 38,
+    borderRadius: 9,
+    objectFit: "contain",
+    flexShrink: 0,
+  },
+
   logo: {
-    fontSize: "2.5rem",
+    fontSize: "1.8rem",
     fontWeight: "bold",
     background: "linear-gradient(90deg, #b197ff, #60a5fa)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
-    letterSpacing: "2px",
+    letterSpacing: "1px",
+    margin: 0,
   },
 
   logoutBtn: {
