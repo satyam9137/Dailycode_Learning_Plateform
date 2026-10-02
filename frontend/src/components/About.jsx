@@ -5,8 +5,8 @@ export default function About() {
   // Store both name and role
   const team = [
     { name: "Faiz Nagpurwala", role: "Frontend Developer" },
-    { name: "Maruf", role: "Dashboards Developer" },
-    { name: "Satyam", role: "Backend Developer" },
+    { name: "Maruf", role: "Dashboard Developer" },
+    { name: "Satyam Gupta", role: "Full-Stack Developer" },
   ];
 
   return (
@@ -40,11 +40,11 @@ export default function About() {
         <div className="about-card">
           <h2 className="card-title">What We Offer</h2>
           <ul className="offer-list">
-            <li>• Daily coding challenges</li>
-            <li>• Learning coding in competitive environment</li>
-            <li>• Interview-level coding questions</li>
-            <li>• Clean UI & easy learning experience</li>
-            <li>• Community guidance</li>
+            <li>Daily coding challenges</li>
+            <li>Learning coding in competitive environment</li>
+            <li>Interview-level coding questions</li>
+            <li>Clean UI & easy learning experience</li>
+            <li> Community guidance</li>
           </ul>
         </div>
       </div>
